@@ -130,7 +130,7 @@ public class VisualDialog : MonoBehaviour
         }
 
         editedString = ApplyBoldFormatting(editedString, dialogData.boldSentences);
-        activeDialog = editedString; // Update activeDialog with the formatted string
+        activeDialog = editedString;
 
         if (typewriting)
         {

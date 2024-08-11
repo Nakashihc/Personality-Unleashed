@@ -22,13 +22,13 @@ public class KarakterGerak : MonoBehaviour
 
     private void Update()
     {
-        if (targetKunci.MusuhDiTargetkan)
+        if (targetKunci.DiTargetkan)
         {
             // Liat Musuh
-            Transform targetMusuh = targetKunci.currentTarget;
-            if (targetMusuh != null)
+            Transform NPC = targetKunci.currentTarget;
+            if (NPC != null)
             {
-                Vector3 directionToTarget = (targetMusuh.position - transform.position).normalized;
+                Vector3 directionToTarget = (NPC.position - transform.position).normalized;
                 directionToTarget.y = 0;
                 Quaternion targetRotation = Quaternion.LookRotation(directionToTarget);
                 transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, Jalan * Time.deltaTime * 100);
@@ -81,61 +81,63 @@ public class KarakterGerak : MonoBehaviour
             idleTimer = 0f;
 
             animator.SetBool("Jalan", true);
-
-            // Animasi W A S D Waktu Ngunci Target
-            // Ke kanan
-            if (Input.GetKey(KeyCode.D))
+            if (targetKunci.lockTargetAktif)
             {
-                animator.SetBool("DiamLock", false);
-                animator.ResetTrigger("Mundur");
-                animator.ResetTrigger("Kiri");
-                animator.ResetTrigger("JalanLock");
-                animator.ResetTrigger("Diamm");
-                animator.SetTrigger("Kanan");
-            }
-            // Ke kiri
-            else if (Input.GetKey(KeyCode.A))
-            {
-                animator.SetBool("DiamLock", false);
-                animator.ResetTrigger("Mundur");
-                animator.ResetTrigger("Kanan");
-                animator.ResetTrigger("JalanLock");
-                animator.ResetTrigger("Diamm");
-                animator.SetTrigger("Kiri");
-            }
-            // Mundur
-            else if (Input.GetKey(KeyCode.S))
-            {
-                animator.SetBool("DiamLock", false);
-                animator.ResetTrigger("Kiri");
-                animator.ResetTrigger("Kanan");
-                animator.ResetTrigger("JalanLock");
-                animator.ResetTrigger("Diamm");
-                animator.SetTrigger("Mundur");
-            }
-            // Maju
-            else if (Input.GetKey(KeyCode.W))
-            {
-                animator.SetBool("DiamLock", false);
-                animator.ResetTrigger("Kiri");
-                animator.ResetTrigger("Kanan");
-                animator.ResetTrigger("Mundur");
-                animator.ResetTrigger("Diamm");
-                animator.SetTrigger("JalanLock");
-            }
-            // Diam!
-            else
-            {
-                animator.SetBool("DiamLock", true);
-                animator.ResetTrigger("Mundur");
-                animator.ResetTrigger("Kanan");
-                animator.ResetTrigger("Mundur");
-                animator.ResetTrigger("JalanLock");
-                animator.SetTrigger("Diamm");
+                // Animasi W A S D Waktu Ngunci Target
+                // Ke kanan
+                if (Input.GetKey(KeyCode.D))
+                {
+                    animator.SetBool("DiamLock", false);
+                    animator.ResetTrigger("Mundur");
+                    animator.ResetTrigger("Kiri");
+                    animator.ResetTrigger("JalanLock");
+                    animator.ResetTrigger("Diamm");
+                    animator.SetTrigger("Kanan");
+                }
+                // Ke kiri
+                else if (Input.GetKey(KeyCode.A))
+                {
+                    animator.SetBool("DiamLock", false);
+                    animator.ResetTrigger("Mundur");
+                    animator.ResetTrigger("Kanan");
+                    animator.ResetTrigger("JalanLock");
+                    animator.ResetTrigger("Diamm");
+                    animator.SetTrigger("Kiri");
+                }
+                // Mundur
+                else if (Input.GetKey(KeyCode.S))
+                {
+                    animator.SetBool("DiamLock", false);
+                    animator.ResetTrigger("Kiri");
+                    animator.ResetTrigger("Kanan");
+                    animator.ResetTrigger("JalanLock");
+                    animator.ResetTrigger("Diamm");
+                    animator.SetTrigger("Mundur");
+                }
+                // Maju
+                else if (Input.GetKey(KeyCode.W))
+                {
+                    animator.SetBool("DiamLock", false);
+                    animator.ResetTrigger("Kiri");
+                    animator.ResetTrigger("Kanan");
+                    animator.ResetTrigger("Mundur");
+                    animator.ResetTrigger("Diamm");
+                    animator.SetTrigger("JalanLock");
+                }
+                // Diam!
+                else
+                {
+                    animator.SetBool("DiamLock", true);
+                    animator.ResetTrigger("Mundur");
+                    animator.ResetTrigger("Kanan");
+                    animator.ResetTrigger("Mundur");
+                    animator.ResetTrigger("JalanLock");
+                    animator.SetTrigger("Diamm");
+                }
             }
 
             // Bergerak Tidak Mengunci Target
-            if (!targetKunci.MusuhDiTargetkan)
+            if (!targetKunci.DiTargetkan)
             {
                 Quaternion toRotation = Quaternion.LookRotation(movement, Vector3.up);
                 transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, currentSpeed * Time.deltaTime * 100);

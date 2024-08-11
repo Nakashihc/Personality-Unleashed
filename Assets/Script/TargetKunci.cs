@@ -6,49 +6,58 @@ using UnityEngine.UI;
 
 public class TargetKunci : MonoBehaviour
 {
+    [Header("Player")]
+    [SerializeField] public string NamaPlayer;
+
     [Header("Kamera")]
     [SerializeField] private Camera KameraUtama;
     [SerializeField] private CinemachineFreeLook kameraCinemachine;
 
     [Header("Aim Icon")]
     [SerializeField] private Image aimIcon;
+    [SerializeField] private float lokasiAimIcon;
 
     [Header("Settings")]
-    [SerializeField] private string tagMusuh;
+    [SerializeField] private string Target;
     [SerializeField] private Vector2 TargetOffset;
     [SerializeField] private float JarakMin;
     [SerializeField] private float JarakMax;
 
     [Header("UI")]
-    [SerializeField] private GameObject tekanAltUI;
+    [SerializeField] private GameObject tekanFUI;
+    [SerializeField] private GameObject tekanEUI;
 
-    [Header("Musuh")]
-    public bool MusuhDiTargetkan;
+    [Header("Target")]
+    public bool DiTargetkan;
     public Transform currentTarget;
 
     [Header("Script")]
     public KarakterGerak karakterGerak;
+
+    [Header("Dialog Settings")]
+    [SerializeField] private VisualDialog visualDialog;
+    public bool isDialogActive = false;
 
     private List<Transform> targetDalamJangkauan = new List<Transform>();
     private int currentTargetIndex = 0;
     private float mouseX;
     private float mouseY;
 
-    private bool lockTargetAktif = false;
+    public bool lockTargetAktif = false;
 
     void Start()
     {
-        Cursor.visible = false;
-        Cursor.lockState = CursorLockMode.Locked;
-
         kameraCinemachine.m_XAxis.m_InputAxisName = "";
         kameraCinemachine.m_YAxis.m_InputAxisName = "";
 
-        tekanAltUI.SetActive(false);
+        tekanFUI.SetActive(false);
+        tekanEUI.SetActive(false);
     }
 
     void Update()
     {
+        CekTargetJangkauan();
+
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             Cursor.visible = true;
@@ -63,9 +72,9 @@ public class TargetKunci : MonoBehaviour
             }
             else
             {
-                MusuhDiTargetkan = false;
+                DiTargetkan = false;
                 currentTarget = null;
-                tekanAltUI.SetActive(true);
+                tekanEUI.SetActive(false);
                 karakterGerak.animator.SetBool("DiamLock", false);
                 karakterGerak.animator.SetBool("LockTarget", false);
             }
@@ -73,29 +82,41 @@ public class TargetKunci : MonoBehaviour
 
         if (lockTargetAktif)
         {
-            CekTargetJangkauan();
+            if (currentTarget == null || !targetDalamJangkauan.Contains(currentTarget))
+            {
+                GantiTarget();
+            }
 
-            if (MusuhDiTargetkan && currentTarget)
+            if (DiTargetkan && currentTarget)
             {
                 float distanceToTarget = Vector3.Distance(transform.position, currentTarget.position);
-                if (distanceToTarget > JarakMax)
+                if (distanceToTarget >= JarakMax)
                 {
                     GantiTarget();
                 }
                 else
                 {
                     NewInputTarget(currentTarget);
-                    tekanAltUI.SetActive(false);
                 }
             }
             else
             {
-                tekanAltUI.SetActive(true);
+                lockTargetAktif = false;
+                DiTargetkan = false;
                 karakterGerak.animator.SetBool("DiamLock", false);
                 karakterGerak.animator.SetBool("LockTarget", false);
-                lockTargetAktif = false;
             }
+
             if (Input.GetKeyDown(KeyCode.E))
+            {
+                if (visualDialog != null)
+                {
+                    visualDialog.StartDialog();
+                }
+                tekanEUI.SetActive(false);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Tab) && !isDialogActive)
             {
                 GantiTarget();
             }
@@ -108,7 +129,7 @@ public class TargetKunci : MonoBehaviour
 
         if (aimIcon)
         {
-            aimIcon.gameObject.SetActive(MusuhDiTargetkan);
+            aimIcon.gameObject.SetActive(DiTargetkan);
         }
 
         kameraCinemachine.m_XAxis.m_InputAxisValue = mouseX;
@@ -118,7 +139,7 @@ public class TargetKunci : MonoBehaviour
     private void CekTargetJangkauan()
     {
         targetDalamJangkauan.Clear();
-        GameObject[] gos = GameObject.FindGameObjectsWithTag(tagMusuh);
+        GameObject[] gos = GameObject.FindGameObjectsWithTag(Target);
 
         foreach (GameObject go in gos)
         {
@@ -131,19 +152,11 @@ public class TargetKunci : MonoBehaviour
             }
         }
 
-        if (targetDalamJangkauan.Count > 0)
+        if (targetDalamJangkauan.Count == 0)
         {
-            tekanAltUI.SetActive(false);
-            if (!MusuhDiTargetkan)
-            {
-                TargetPasang();
-            }
-        }
-        else if (MusuhDiTargetkan)
-        {
-            MusuhDiTargetkan = false;
+            DiTargetkan = false;
+            lockTargetAktif = false;
             currentTarget = null;
-            tekanAltUI.SetActive(true);
             karakterGerak.animator.SetBool("DiamLock", false);
             karakterGerak.animator.SetBool("LockTarget", false);
         }
@@ -151,28 +164,34 @@ public class TargetKunci : MonoBehaviour
 
     private void TargetPasang()
     {
+        tekanEUI.SetActive(true);
+
         if (targetDalamJangkauan.Count > 0)
         {
             currentTargetIndex = 0;
             currentTarget = targetDalamJangkauan[currentTargetIndex];
-            MusuhDiTargetkan = true;
+            DiTargetkan = true;
             karakterGerak.animator.SetBool("LockTarget", true);
             karakterGerak.animator.SetBool("DiamLock", true);
             karakterGerak.animator.SetTrigger("Diamm");
+
+            visualDialog = currentTarget.GetComponent<VisualDialog>();
         }
         else
         {
-            MusuhDiTargetkan = false;
+            DiTargetkan = false;
             currentTarget = null;
+            visualDialog = null;
         }
     }
 
     private void GantiTarget()
     {
-        if (targetDalamJangkauan.Count <= 1) return;
+        if (targetDalamJangkauan.Count < 1) return;
 
         currentTargetIndex = (currentTargetIndex + 1) % targetDalamJangkauan.Count;
         currentTarget = targetDalamJangkauan[currentTargetIndex];
+        visualDialog = currentTarget.GetComponent<VisualDialog>();
     }
 
     private void NewInputTarget(Transform target)
@@ -181,9 +200,11 @@ public class TargetKunci : MonoBehaviour
 
         Vector3 viewPos = KameraUtama.WorldToViewportPoint(target.position);
 
+        Vector3 screenPos = KameraUtama.WorldToScreenPoint(target.position);
+
         if (aimIcon)
         {
-            aimIcon.transform.position = KameraUtama.WorldToScreenPoint(target.position);
+            aimIcon.transform.position = new Vector3(screenPos.x, lokasiAimIcon, screenPos.z);
         }
 
         if ((target.position - transform.position).magnitude < JarakMin) return;

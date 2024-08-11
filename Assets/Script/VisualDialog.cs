@@ -13,14 +13,15 @@ public class VisualDialog : MonoBehaviour
     public class DialogData
     {
         public Character character;
-        public string name;
         [TextArea(5, 6)]
         public string dialog;
         public List<string> boldSentences;
     }
 
-    [Header("Player Name")]
+    [Header("Nama Karakter")]
     public string PlayerName;
+    public string NPCName;
+    private TargetKunci targetKunci;
 
     [Header("Active Dialog")]
     [TextArea(5, 3)]
@@ -52,19 +53,23 @@ public class VisualDialog : MonoBehaviour
 
     public void StartDialog()
     {
+        PlayerName = targetKunci.NamaPlayer;
         currentDialogIndex = 0;
         ActivateDialog(playerDialogs[currentDialogIndex]);
         StartDialogEvent?.Invoke();
+        targetKunci.isDialogActive = true;
     }
+
 
     void Start()
     {
         if (AutoStartDialog) StartDialog();
+        targetKunci = GameObject.FindAnyObjectByType<TargetKunci>();
     }
 
     void Update()
     {
-        if ((Input.GetKeyDown(KeyCode.Mouse0) || Input.GetKeyDown(KeyCode.Return)) && isDialogRunning)
+        if (Input.GetKeyDown(KeyCode.Mouse0) && isDialogRunning)
         {
             if (typewriting && DialogCoroutine != null)
             {
@@ -98,35 +103,32 @@ public class VisualDialog : MonoBehaviour
                 SetChildStatus(ParentObject, false);
             }
             FinishDialogEvent?.Invoke();
+            targetKunci.isDialogActive = false;
         }
     }
 
+
     void ActivateDialog(DialogData dialogData)
     {
-        string player = PlayerName;
         SetChildStatus(ParentObject, true);
         if (dialogData.character == Character.Player)
         {
             playerImage.gameObject.SetActive(true);
             npcImage.gameObject.SetActive(false);
+            nameText.text = PlayerName;
         }
         else if (dialogData.character == Character.NPC)
         {
             playerImage.gameObject.SetActive(false);
             npcImage.gameObject.SetActive(true);
-        }
-
-        nameText.text = dialogData.name;
-        if (dialogData.name == "<name>")
-        {
-            nameText.text = player;
+            nameText.text = NPCName;
         }
 
         activeDialog = dialogData.dialog;
         string editedString = activeDialog;
         if (activeDialog.Contains("<name>"))
         {
-            editedString = EditString(activeDialog, "<name>", player);
+            editedString = EditString(activeDialog, "<name>", PlayerName);
         }
 
         editedString = ApplyBoldFormatting(editedString, dialogData.boldSentences);
